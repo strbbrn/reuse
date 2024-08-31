@@ -2,6 +2,10 @@ name: Reuse
 
 on:
   workflow_call:
+    secrets:
+      TOKEN:
+        description: 'A token passed from the caller workflow'
+        required: true
 
 jobs:
   print:
