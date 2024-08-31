@@ -26,4 +26,5 @@ jobs:
           for q in (os.getenv("MY_VAL2")):
             print(q)
         shell: python
-    
+  print2:
+    uses: strbbrn/reuse1/.github/workflows/reuse1.yml@main
