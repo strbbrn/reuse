@@ -27,6 +27,6 @@ jobs:
             print(q)
         shell: python
       - name: Checkout
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
   print2:
     uses: strbbrn/reuse1/.github/workflows/reuse1.yml@main
