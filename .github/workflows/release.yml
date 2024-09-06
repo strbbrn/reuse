@@ -34,7 +34,7 @@ jobs:
 
           # Fetch the PR body using GitHub REST API
           PR_BODY=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" | jq -r '.body')
+            "https://api.github.com/repos/${{ github.repository }}/pulls/2" | jq -r '.body')
 
           # Save the PR body to a file
           echo "$PR_BODY" > pr_body.txt
