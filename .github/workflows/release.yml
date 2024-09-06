@@ -14,19 +14,29 @@ jobs:
 
       - name: Fetch the pull request body
         id: fetch-pr-body
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Fetch the pull request body using GitHub API
-          PR_NUMBER=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state merged --json number --jq '.[0].number')
+          # Extract the branch name from the push event
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          # Fetch the pull request associated with the branch using GitHub API
+          PR_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&state=closed")
+
+          # Extract the PR number
+          PR_NUMBER=$(echo "$PR_RESPONSE" | jq '.[0].number')
 
           if [ -z "$PR_NUMBER" ]; then
             echo "No PR found for this push."
             exit 1
           fi
 
-          # Fetch the PR body
-          PR_BODY=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json body --jq '.body')
+          # Fetch the PR body using GitHub REST API
+          PR_BODY=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" | jq -r '.body')
 
-          # Save PR body to a file
+          # Save the PR body to a file
           echo "$PR_BODY" > pr_body.txt
 
       - name: Display the PR body (for debug purposes)
