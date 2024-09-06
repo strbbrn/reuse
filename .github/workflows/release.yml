@@ -1,0 +1,54 @@
+name: Create Release from PR Body
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your desired branch
+
+jobs:
+  fetch-pr-body-and-create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Fetch the pull request body
+        id: fetch-pr-body
+        run: |
+          # Fetch the pull request body using GitHub API
+          PR_NUMBER=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state merged --json number --jq '.[0].number')
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found for this push."
+            exit 1
+          fi
+
+          # Fetch the PR body
+          PR_BODY=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json body --jq '.body')
+
+          # Save PR body to a file
+          echo "$PR_BODY" > pr_body.txt
+
+      - name: Display the PR body (for debug purposes)
+        run: cat pr_body.txt
+
+      - name: Create a new release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v$(date +'%Y%m%d%H%M%S')"  # Example tag, you can change this logic
+          RELEASE_NAME="Release $TAG_NAME"
+
+          # Read PR body from file and escape newlines for JSON
+          PR_BODY=$(cat pr_body.txt | sed ':a;N;$!ba;s/\r//g;s/\n/\\n/g')
+
+          # Create the release using GitHub API
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "tag_name": "'"$TAG_NAME"'",
+              "name": "'"$RELEASE_NAME"'",
+              "body": "'"$PR_BODY"'"
+            }' \
+            https://api.github.com/repos/${{ github.repository }}/releases
