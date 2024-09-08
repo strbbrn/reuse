@@ -1,4 +1,4 @@
-name: Reuse
+name: Reuse me
 
 on:
   workflow_call:
